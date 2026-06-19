@@ -1,8 +1,10 @@
 import { Dashboard } from "@/components/dashboard/dashboard";
-import type { DashboardData } from "@/lib/types";
-import raw from "../public/dashboard-data.json";
+import { loadDashboard } from "@/lib/load-data";
 
-export default function Page() {
-  const data = raw as unknown as DashboardData;
-  return <Dashboard data={data} />;
+// Always read the freshest synced dataset at request time.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const { data, lastSyncedAt } = await loadDashboard();
+  return <Dashboard data={data} lastSyncedAt={lastSyncedAt} />;
 }

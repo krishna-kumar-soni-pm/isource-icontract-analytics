@@ -22,6 +22,7 @@ import { CompaniesTab } from "./companies-tab";
 import { FeaturesTab } from "./features-tab";
 import { AdoptionTab } from "./adoption-tab";
 import { MatrixTab } from "./matrix-tab";
+import { SyncStatus } from "./sync-status";
 
 const TABS = [
   { value: "overview", label: "Overview", icon: LayoutGrid },
@@ -32,7 +33,13 @@ const TABS = [
   { value: "adoption", label: "Adoption", icon: Target },
 ];
 
-export function Dashboard({ data }: { data: DashboardData }) {
+export function Dashboard({
+  data,
+  lastSyncedAt = null,
+}: {
+  data: DashboardData;
+  lastSyncedAt?: string | null;
+}) {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
 
   const categories = useMemo(
@@ -62,10 +69,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
                 {fmtDate(data.summary.dataThrough)}
               </p>
             </div>
-            <div className="hidden text-right text-xs text-muted-foreground sm:block">
-              <div className="font-medium text-foreground">{data.summary.totals.companies} customers</div>
-              <div>{data.summary.totals.uniqueFeatures} tracked features</div>
-            </div>
+            <SyncStatus lastSyncedAt={lastSyncedAt} />
           </div>
         </div>
       </header>
