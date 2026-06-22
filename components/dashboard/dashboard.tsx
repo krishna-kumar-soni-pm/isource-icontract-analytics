@@ -56,25 +56,28 @@ export function Dashboard({
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-1 px-4 py-3 md:px-6">
-          <div className="flex items-center justify-between gap-3">
+      {/* Header — fixed top bar */}
+      <header className="fixed inset-x-0 top-0 z-40 border-b bg-background/90 shadow-xs backdrop-blur supports-[backdrop-filter]:bg-background/75">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-2.5 md:px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
+              Z
+            </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight">
-                iSource &amp; iContract — Customer Analytics
+              <h1 className="text-base font-semibold leading-tight tracking-tight">
+                iSource &amp; iContract Customer Analytics
               </h1>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs leading-tight text-muted-foreground">
                 Zycus procurement suite · Userpilot product usage · data through{" "}
                 {fmtDate(data.summary.dataThrough)}
               </p>
             </div>
-            <SyncStatus lastSyncedAt={lastSyncedAt} />
           </div>
+          <SyncStatus lastSyncedAt={lastSyncedAt} />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-5 md:px-6">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-5 pt-[68px] md:px-6">
         <Tabs defaultValue="overview" className="gap-4">
           <div className="flex flex-col gap-3">
             <KpiCards kpis={kpis} />
@@ -108,7 +111,7 @@ export function Dashboard({
           ) : (
             <>
               <TabsContent value="overview">
-                <OverviewTab records={filtered} companies={companies} features={features} />
+                <OverviewTab data={data} records={filtered} companies={companies} features={features} />
               </TabsContent>
               <TabsContent value="products">
                 <ProductsTab records={filtered} companies={companies} features={features} />

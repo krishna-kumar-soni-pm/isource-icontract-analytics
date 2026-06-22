@@ -9,6 +9,7 @@ export async function GET(req: Request) {
   const origin = new URL(req.url).origin;
   const code = buildAgent({
     ingestUrl: `${origin}/api/ingest`,
+    statusUrl: `${origin}/api/sync-status`,
     secret: process.env.INGEST_SECRET ?? "",
     account: ACCOUNT,
   });

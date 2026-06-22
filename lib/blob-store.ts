@@ -55,6 +55,41 @@ export async function getLatestVersion(): Promise<VersionPayload | null> {
   }
 }
 
+export interface SyncStatus {
+  phase: "idle" | "resolving" | "pulling" | "saving" | "done" | "error";
+  done: number;
+  total: number;
+  label: string;
+  at: string; // ISO
+}
+
+const STATUS_KEY = "status.json";
+
+/** Overwrite the live sync status (heartbeat from the in-browser agent). */
+export async function writeStatus(status: SyncStatus): Promise<void> {
+  await put(STATUS_KEY, JSON.stringify(status), {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+    cacheControlMaxAge: 0,
+  });
+}
+
+/** Read the live sync status, or null if none. */
+export async function readStatus(): Promise<SyncStatus | null> {
+  if (!tokenAvailable()) return null;
+  try {
+    const { blobs } = await list({ prefix: STATUS_KEY });
+    if (!blobs.length) return null;
+    const res = await fetch(blobs[0].url, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as SyncStatus;
+  } catch {
+    return null;
+  }
+}
+
 /** Lightweight metadata for the UI (last synced + retained versions). */
 export async function getSyncMeta(): Promise<SyncMeta> {
   if (!tokenAvailable()) return { lastSyncedAt: null, versionCount: 0, versions: [] };

@@ -17,7 +17,7 @@ import { PRODUCT_COLOR } from "@/lib/colors";
 import { SectionCard } from "./section";
 import { AdoptionMeter, KindBadge, ProductBadge } from "./badges";
 import { SortHeader, useSortable } from "./use-sortable";
-import { RankBarChart } from "./charts";
+import { BarList } from "./bar-list";
 
 export function FeaturesTab({ features }: { features: Feature[] }) {
   const { sorted, sortKey, sortDir, toggle } = useSortable(features, "totalOccurrences");
@@ -27,11 +27,11 @@ export function FeaturesTab({ features }: { features: Feature[] }) {
     () =>
       features
         .filter((f) => f.totalOccurrences > 0)
-        .slice(0, 12)
+        .slice(0, 10)
         .map((f) => ({
           label: f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, ""),
           value: f.totalOccurrences,
-          full: f.name,
+          sub: `${f.product} · ${f.companiesAdopted}/${f.companiesAvailable} customers`,
         })),
     [features],
   );
@@ -41,11 +41,11 @@ export function FeaturesTab({ features }: { features: Feature[] }) {
       [...features]
         .filter((f) => f.companiesAvailable >= 3)
         .sort((a, b) => b.adoptionRate - a.adoptionRate)
-        .slice(0, 12)
+        .slice(0, 10)
         .map((f) => ({
           label: f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, ""),
           value: f.adoptionRate,
-          full: `${f.name} — ${f.companiesAdopted}/${f.companiesAvailable} customers`,
+          sub: `${f.companiesAdopted} of ${f.companiesAvailable} customers`,
         })),
     [features],
   );
@@ -61,13 +61,17 @@ export function FeaturesTab({ features }: { features: Feature[] }) {
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title="Most-used features" description="Ranked by total interactions">
-          <RankBarChart data={topByVolume} valueLabel="Interactions" color="var(--chart-1)" />
+          <BarList data={topByVolume} color="var(--chart-1)" valueFormatter={compact} />
         </SectionCard>
         <SectionCard
-          title="Best-adopted features"
-          description="Share of available customers actively using each feature (≥3 customers)"
+          title="Most widely adopted"
+          description="Reach — share of customers (with access) actively using the feature, for features available to ≥3 customers"
         >
-          <RankBarChart data={topByAdoption} valueLabel="%" color="var(--chart-3)" />
+          <BarList
+            data={topByAdoption}
+            color="var(--chart-3)"
+            valueFormatter={(n) => `${Math.round(n)}%`}
+          />
         </SectionCard>
       </div>
 

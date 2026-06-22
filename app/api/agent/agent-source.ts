@@ -64,7 +64,12 @@ const COMPANIES: { name: string; products: string[]; search?: string }[] = [
   { name: "Zycus Supplier Network", products: ["iContract"] },
 ];
 
-export function buildAgent(opts: { ingestUrl: string; secret: string; account: string }): string {
+export function buildAgent(opts: {
+  ingestUrl: string;
+  statusUrl: string;
+  secret: string;
+  account: string;
+}): string {
   const cfg = JSON.stringify(opts);
   const companies = JSON.stringify(COMPANIES);
   return `(async () => {
@@ -72,6 +77,7 @@ export function buildAgent(opts: { ingestUrl: string; secret: string; account: s
   const COMPANIES = ${companies};
   const BASE = 'https://appex.userpilot.io/api/v1/analytics/' + CFG.account;
   const tok = localStorage.getItem('up_access_token');
+  const report = (phase, done, total, label) => { try { fetch(CFG.statusUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ secret: CFG.secret, phase, done, total, label }) }).catch(()=>{}); } catch(e){} };
   // ---- progress overlay ----
   let box = document.getElementById('up-sync-box');
   if (box) box.remove();
@@ -108,6 +114,7 @@ export function buildAgent(opts: { ingestUrl: string; secret: string; account: s
     const c = COMPANIES[i];
     if (cache[c.name]) { idmap[c.name] = cache[c.name]; continue; }
     say('Resolving customers…', (i+1) + '/' + COMPANIES.length + '  ' + c.name);
+    report('resolving', i+1, COMPANIES.length, 'Resolving ' + c.name);
     const q = c.search || c.name;
     try {
       const r = await fetch(BASE + '/companies?search=' + encodeURIComponent(q) + '&environment=production&compact=true', { headers:H, credentials:'include' });
@@ -150,6 +157,7 @@ export function buildAgent(opts: { ingestUrl: string; secret: string; account: s
     if (!cid) { done++; continue; }
     for (const product of c.products) {
       say('Pulling usage…', (++done > names.length ? names.length : done) + '  ·  ' + c.name + ' / ' + product);
+      report('pulling', done, COMPANIES.length, c.name + ' / ' + product);
       try {
         const ev = await pull('/events/breakdown', {
           source:'any', company_id:cid, environment:'production', from, to, title: product,
@@ -167,13 +175,16 @@ export function buildAgent(opts: { ingestUrl: string; secret: string; account: s
 
   // ---- send to dashboard ----
   say('Saving to dashboard…', rows.length + ' rows');
+  report('saving', COMPANIES.length, COMPANIES.length, rows.length + ' rows');
   try {
     const r = await fetch(CFG.ingestUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ secret: CFG.secret, rows }) });
     const j = await r.json();
     if (j.ok) {
-      say('✓ Synced', (j.totals ? (j.totals.companies + ' customers · ' + j.totals.totalOccurrences.toLocaleString() + ' interactions') : '') + ' — refresh the dashboard.');
+      const summary = j.totals ? (j.totals.companies + ' customers · ' + j.totals.totalOccurrences.toLocaleString() + ' interactions') : '';
+      say('✓ Synced', summary + ' — refresh the dashboard.');
+      report('done', COMPANIES.length, COMPANIES.length, summary);
       setTimeout(() => box.remove(), 9000);
-    } else { say('Sync failed', j.error || ('HTTP ' + r.status)); }
-  } catch(e) { say('Sync failed', String(e)); }
+    } else { say('Sync failed', j.error || ('HTTP ' + r.status)); report('error', 0, 0, j.error || ('HTTP ' + r.status)); }
+  } catch(e) { say('Sync failed', String(e)); report('error', 0, 0, String(e)); }
 })();`;
 }

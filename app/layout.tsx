@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "iSource & iContract — Customer Analytics",
+  title: "iSource & iContract Customer Analytics",
   description:
     "Userpilot product analytics for Zycus iSource & iContract: events, pages, adoption and engagement across customers.",
 };

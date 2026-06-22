@@ -130,6 +130,9 @@ export function buildDataset(rows: RawRow[], today = new Date()): DashboardData 
     const occ = recs.reduce((a, r) => a + r.occurrences, 0);
     const adopters = recs.filter((r) => r.adopted);
     const avgVals = adopters.filter((r) => r.avgPerUser > 0).map((r) => r.avgPerUser);
+    // count distinct companies (a few events are double-tracked in Userpilot)
+    const availCos = new Set(recs.map((r) => r.company)).size;
+    const adoptedCos = new Set(adopters.map((r) => r.company)).size;
     features.push({
       product: recs[0].product,
       kind: recs[0].kind,
@@ -139,9 +142,9 @@ export function buildDataset(rows: RawRow[], today = new Date()): DashboardData 
       owner: recs.find((r) => r.owner)?.owner ?? "",
       totalOccurrences: occ,
       totalUsers: recs.reduce((a, r) => a + r.users, 0),
-      companiesAvailable: recs.length,
-      companiesAdopted: adopters.length,
-      adoptionRate: recs.length ? round1((100 * adopters.length) / recs.length) : 0,
+      companiesAvailable: availCos,
+      companiesAdopted: adoptedCos,
+      adoptionRate: availCos ? round1((100 * adoptedCos) / availCos) : 0,
       avgPerUser: round1(mean(avgVals)),
       lastActivity: maxDate(recs.map((r) => r.lastActivity)),
       insertedAt: recs.map((r) => r.insertedAt).filter(Boolean).sort()[0] ?? null,

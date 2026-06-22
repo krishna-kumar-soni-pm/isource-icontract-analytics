@@ -7,19 +7,26 @@ import { SEGMENTS, SEGMENT_ORDER, withSegments } from "@/lib/segments";
 import { CHART_COLORS, PRODUCT_COLOR, RECENCY_COLOR } from "@/lib/colors";
 import { compact, fmtMonth, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { generateInsights } from "@/lib/insights";
+import type { DashboardData } from "@/lib/types";
 import { SectionCard, LegendRow } from "./section";
-import { ColumnChart, DonutChart, QuadrantScatter, RankBarChart } from "./charts";
+import { ColumnChart, DonutChart, QuadrantScatter } from "./charts";
+import { BarList } from "./bar-list";
+import { InsightsPanel } from "./insights-panel";
 
 export function OverviewTab({
+  data,
   records,
   companies,
   features,
 }: {
+  data: DashboardData;
   records: Datum[];
   companies: Company[];
   features: Feature[];
 }) {
   const segmented = useMemo(() => withSegments(companies), [companies]);
+  const insights = useMemo(() => generateInsights(data), [data]);
 
   const productSplit = useMemo(() => {
     const occ = sumBy(records, (r) => r.product, (r) => r.occurrences);
@@ -92,8 +99,8 @@ export function OverviewTab({
     () =>
       features
         .filter((f) => f.totalOccurrences > 0)
-        .slice(0, 10)
-        .map((f) => ({ label: f.name, value: f.totalOccurrences, full: f.name })),
+        .slice(0, 8)
+        .map((f) => ({ label: f.name, value: f.totalOccurrences, sub: `${f.product} · ${f.category}` })),
     [features],
   );
 
@@ -101,8 +108,8 @@ export function OverviewTab({
     () =>
       companies
         .filter((c) => c.totalOccurrences > 0)
-        .slice(0, 10)
-        .map((c) => ({ label: c.name, value: c.totalOccurrences, full: c.name })),
+        .slice(0, 8)
+        .map((c) => ({ label: c.name, value: c.totalOccurrences, sub: c.products.join(" · ") })),
     [companies],
   );
 
@@ -121,6 +128,8 @@ export function OverviewTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <InsightsPanel insights={insights} />
+
       {/* Distribution row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SectionCard title="Interactions by product" description="Share of total events & page views">
@@ -238,10 +247,10 @@ export function OverviewTab({
       {/* Leaderboards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title="Top features by interactions" description="Most-used events & pages across all customers">
-          <RankBarChart data={topFeatures} valueLabel="Interactions" color="var(--chart-1)" />
+          <BarList data={topFeatures} color="var(--chart-1)" valueFormatter={compact} />
         </SectionCard>
         <SectionCard title="Top customers by interactions" description="Most active accounts by total volume">
-          <RankBarChart data={topCompanies} valueLabel="Interactions" color="var(--chart-2)" />
+          <BarList data={topCompanies} color="var(--chart-2)" valueFormatter={compact} />
         </SectionCard>
       </div>
 

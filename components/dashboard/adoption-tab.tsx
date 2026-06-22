@@ -5,7 +5,7 @@ import { TrendingDown, Sparkles } from "lucide-react";
 import type { Company, Feature } from "@/lib/types";
 import { adoptionBand } from "@/lib/analytics";
 import { PRODUCT_COLOR } from "@/lib/colors";
-import { compact, pct } from "@/lib/format";
+import { compact, fmtDate, pct } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "./section";
 import { ProductBadge } from "./badges";
@@ -74,8 +74,20 @@ export function AdoptionTab({
   );
 
   const dormant = useMemo(
-    () => features.filter((f) => f.totalOccurrences === 0).sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      features
+        .filter((f) => f.totalOccurrences === 0)
+        // biggest gaps first: tracked + available to the most customers, yet never used
+        .sort(
+          (a, b) =>
+            b.companiesAvailable - a.companiesAvailable ||
+            (a.insertedAt ?? "").localeCompare(b.insertedAt ?? ""),
+        ),
     [features],
+  );
+  const dormantReach = useMemo(
+    () => Math.max(0, ...dormant.map((f) => f.companiesAvailable)),
+    [dormant],
   );
 
   const opportunities = useMemo(
@@ -132,7 +144,7 @@ export function AdoptionTab({
               {opportunities.map((f) => (
                 <div key={f.name} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
                   <div className="min-w-0">
-                    <div className="truncate text-sm" title={f.name}>
+                    <div className="text-sm leading-snug">
                       {f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, "")}
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5">
@@ -157,23 +169,55 @@ export function AdoptionTab({
 
         <SectionCard
           title="Dormant features"
-          description="Tracked but never triggered in this selection — review for relevance or rollout gaps"
+          description="Instrumented in Userpilot but never triggered — biggest reach gaps first (rollout, discoverability or tracking issues)"
           action={<TrendingDown className="size-4 text-muted-foreground" />}
         >
           {dormant.length ? (
-            <div className="flex flex-wrap gap-1.5">
-              {dormant.map((f) => (
-                <Badge
-                  key={`${f.product}|${f.name}`}
-                  variant="outline"
-                  className="max-w-full font-normal text-muted-foreground"
-                  title={f.name}
-                >
-                  <span className="truncate">
-                    {f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, "")}
-                  </span>
-                </Badge>
-              ))}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <span>
+                  <span className="font-semibold text-foreground">{dormant.length}</span> features
+                  with zero activity
+                </span>
+                <span>
+                  available to up to{" "}
+                  <span className="font-semibold text-foreground">{dormantReach}</span> customers
+                </span>
+              </div>
+              <div className="flex flex-col divide-y">
+                {dormant.slice(0, 12).map((f) => (
+                  <div
+                    key={`${f.product}|${f.name}`}
+                    className="flex items-start justify-between gap-3 py-2 first:pt-0"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm leading-snug">
+                        {f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, "")}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <ProductBadge product={f.product} className="px-1 py-0 text-[10px]" />
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+                          {f.category}
+                        </Badge>
+                        {f.insertedAt && (
+                          <span className="text-[11px] text-muted-foreground">
+                            since {fmtDate(f.insertedAt)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-sm font-semibold tabular-nums">{f.companiesAvailable}</div>
+                      <div className="text-[11px] text-muted-foreground">have access</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {dormant.length > 12 && (
+                <p className="text-xs text-muted-foreground">
+                  + {dormant.length - 12} more dormant features
+                </p>
+              )}
             </div>
           ) : (
             <p className="py-4 text-center text-sm text-muted-foreground">

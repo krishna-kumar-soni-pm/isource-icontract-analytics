@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionCard } from "./section";
 import { ProductBadge } from "./badges";
-import { RankBarChart } from "./charts";
+import { BarList } from "./bar-list";
 
 interface ProductRollup {
   product: Product;
@@ -73,7 +73,7 @@ function ProductCard({
     .map((f) => ({
       label: f.name.replace(/^i(Source|Contract)\s*[|\-]\s*/i, ""),
       value: f.totalOccurrences,
-      full: f.name,
+      sub: f.category,
     }));
 
   return (
@@ -111,7 +111,7 @@ function ProductCard({
             <ArrowUpRight className="size-3.5" />
             Top features by interactions
           </div>
-          <RankBarChart data={top} valueLabel="Interactions" color={PRODUCT_COLOR[r.product]} />
+          <BarList data={top} color={PRODUCT_COLOR[r.product]} valueFormatter={compact} />
         </div>
       </CardContent>
     </Card>
