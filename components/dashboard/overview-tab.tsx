@@ -7,26 +7,25 @@ import { SEGMENTS, SEGMENT_ORDER, withSegments } from "@/lib/segments";
 import { CHART_COLORS, PRODUCT_COLOR, RECENCY_COLOR } from "@/lib/colors";
 import { compact, fmtMonth, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { generateInsights } from "@/lib/insights";
-import type { DashboardData } from "@/lib/types";
+import type { Insight } from "@/lib/insights";
 import { SectionCard, LegendRow } from "./section";
 import { ColumnChart, DonutChart, QuadrantScatter } from "./charts";
 import { BarList } from "./bar-list";
 import { InsightsPanel } from "./insights-panel";
 
 export function OverviewTab({
-  data,
+  insights,
   records,
   companies,
   features,
 }: {
-  data: DashboardData;
+  insights: Insight[];
   records: Datum[];
   companies: Company[];
   features: Feature[];
 }) {
   const segmented = useMemo(() => withSegments(companies), [companies]);
-  const insights = useMemo(() => generateInsights(data), [data]);
+  const headlineInsights = useMemo(() => insights.filter((i) => i.headline), [insights]);
 
   const productSplit = useMemo(() => {
     const occ = sumBy(records, (r) => r.product, (r) => r.occurrences);
@@ -128,7 +127,7 @@ export function OverviewTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <InsightsPanel insights={insights} />
+      <InsightsPanel insights={headlineInsights} />
 
       {/* Distribution row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

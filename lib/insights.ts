@@ -2,12 +2,26 @@ import type { DashboardData } from "./types";
 import { withSegments } from "./segments";
 
 export type InsightTone = "good" | "warn" | "info" | "risk";
+export type InsightPlacement =
+  | "overview"
+  | "products"
+  | "customers"
+  | "features"
+  | "adoption";
 
 export interface Insight {
   id: string;
   tone: InsightTone;
   title: string;
   detail: string;
+  placement: InsightPlacement;
+  /** show in the Overview highlights strip */
+  headline?: boolean;
+}
+
+/** Filter helper used by each tab to pull its contextual insights. */
+export function insightsFor(insights: Insight[], placement: InsightPlacement): Insight[] {
+  return insights.filter((i) => i.placement === placement);
 }
 
 const pctOf = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
@@ -30,6 +44,8 @@ export function generateInsights(data: DashboardData): Insight[] {
     out.push({
       id: "search-skew",
       tone: "warn",
+      placement: "features",
+      headline: true,
       title: `Search drives ${searchShare}% of all activity`,
       detail:
         "Two list-search events dominate the totals. Filter Search out (or view by category) to read true feature adoption underneath the volume.",
@@ -44,6 +60,8 @@ export function generateInsights(data: DashboardData): Insight[] {
     out.push({
       id: "concentration",
       tone: "info",
+      placement: "customers",
+      headline: true,
       title: `Top 5 customers = ${pctOf(top5, total)}% of usage`,
       detail: `${top.name} alone accounts for ${pctOf(top.totalOccurrences, total)}%. Engagement is concentrated in a handful of accounts — the long tail is light.`,
     });
@@ -56,6 +74,7 @@ export function generateInsights(data: DashboardData): Insight[] {
   out.push({
     id: "segments",
     tone: champions >= risk ? "good" : "warn",
+    placement: "customers",
     title: `${champions} champions, ${risk} at-risk or dormant`,
     detail:
       champions >= risk
@@ -70,6 +89,8 @@ export function generateInsights(data: DashboardData): Insight[] {
     out.push({
       id: "product-split",
       tone: "info",
+      placement: "products",
+      headline: true,
       title: `iContract ${pctOf(ic.occurrences, total)}% vs iSource ${pctOf(is.occurrences, total)}% of activity`,
       detail: `iContract spans ${ic.companies} customers and iSource ${is.companies}. iSource usage is lighter and more concentrated in sourcing-event and scoresheet workflows.`,
     });
@@ -81,6 +102,7 @@ export function generateInsights(data: DashboardData): Insight[] {
   out.push({
     id: "feature-reach",
     tone: dormant > broad ? "warn" : "good",
+    placement: "adoption",
     title: `${dormant} features never triggered · ${broad} broadly adopted`,
     detail: `Of ${summary.totals.uniqueFeatures} tracked features, ${dormant} have zero activity (rollout or discoverability gaps), while only ${broad} reach the majority of customers that have access.`,
   });
@@ -90,6 +112,8 @@ export function generateInsights(data: DashboardData): Insight[] {
   out.push({
     id: "recency",
     tone: pctOf(active30, companies.length) >= 80 ? "good" : "warn",
+    placement: "overview",
+    headline: true,
     title: `${active30} of ${companies.length} customers active in last 30 days`,
     detail: `${pctOf(active30, companies.length)}% of accounts touched the products recently — the rest haven't and may need outreach.`,
   });

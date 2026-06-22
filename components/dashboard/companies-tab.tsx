@@ -32,6 +32,8 @@ import { SectionCard } from "./section";
 import { AdoptionMeter, ProductBadge } from "./badges";
 import { SortHeader, useSortable } from "./use-sortable";
 import { CompanySheet } from "./company-sheet";
+import { InsightCallouts } from "./insight-callout";
+import { insightsFor, type Insight } from "@/lib/insights";
 
 type GroupBy = "none" | "segment" | "products" | "recency" | "adoption";
 type Row = Company & { segment: SegmentKey };
@@ -43,9 +45,11 @@ function productGroup(c: Company): string {
 }
 
 export function CompaniesTab({
+  insights,
   companies,
   allRecords,
 }: {
+  insights: Insight[];
   companies: Company[];
   allRecords: Datum[];
 }) {
@@ -83,7 +87,8 @@ export function CompaniesTab({
   }, [sorted, groupBy]);
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
+      <InsightCallouts insights={insightsFor(insights, "customers")} />
       <SectionCard
         title="Customer directory"
         description={`${companies.length} customers · click any row for a full account breakdown`}
@@ -195,6 +200,6 @@ export function CompaniesTab({
         records={allRecords}
         onOpenChange={(o) => !o && setSelected(null)}
       />
-    </>
+    </div>
   );
 }

@@ -26,14 +26,14 @@ export function InsightsPanel({ insights }: { insights: Insight[] }) {
             <span className="flex size-6 items-center justify-center rounded-md bg-primary/10">
               <Sparkles className="size-3.5 text-primary" />
             </span>
-            AI insights
+            AI highlights
           </CardTitle>
           <Badge variant="secondary" className="text-[10px] font-normal text-muted-foreground">
             auto-generated from current data
           </Badge>
         </div>
         <CardDescription className="text-xs">
-          What stands out across customers, products and features in this snapshot.
+          Headline signals from this snapshot — more contextual insights appear at the top of each tab.
         </CardDescription>
       </CardHeader>
       <CardContent>

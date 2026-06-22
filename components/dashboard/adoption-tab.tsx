@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "./section";
 import { ProductBadge } from "./badges";
 import { ColumnChart, DepthScatter } from "./charts";
+import { InsightCallouts } from "./insight-callout";
+import { insightsFor, type Insight } from "@/lib/insights";
 
 const BAND_ORDER = [
   "0% — Dormant",
@@ -27,9 +29,11 @@ const BAND_COLOR: Record<string, string> = {
 };
 
 export function AdoptionTab({
+  insights,
   companies,
   features,
 }: {
+  insights: Insight[];
   companies: Company[];
   features: Feature[];
 }) {
@@ -101,6 +105,7 @@ export function AdoptionTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <InsightCallouts insights={insightsFor(insights, "adoption")} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard
           title="Customer adoption distribution"

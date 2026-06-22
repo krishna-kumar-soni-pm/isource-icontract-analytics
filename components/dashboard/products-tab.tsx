@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { SectionCard } from "./section";
 import { ProductBadge } from "./badges";
 import { BarList } from "./bar-list";
+import { InsightCallouts } from "./insight-callout";
+import { insightsFor, type Insight } from "@/lib/insights";
 
 interface ProductRollup {
   product: Product;
@@ -119,10 +121,12 @@ function ProductCard({
 }
 
 export function ProductsTab({
+  insights,
   records,
   companies,
   features,
 }: {
+  insights: Insight[];
   records: Datum[];
   companies: Company[];
   features: Feature[];
@@ -137,6 +141,7 @@ export function ProductsTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <InsightCallouts insights={insightsFor(insights, "products")} />
       {rollups.length > 1 && (
         <SectionCard
           title="Product footprint at a glance"

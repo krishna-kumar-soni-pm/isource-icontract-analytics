@@ -11,6 +11,7 @@ import {
   computeKpis,
   type Filters,
 } from "@/lib/analytics";
+import { generateInsights } from "@/lib/insights";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { fmtDate } from "@/lib/format";
@@ -51,6 +52,7 @@ export function Dashboard({
   const companies = useMemo(() => aggregateCompanies(filtered), [filtered]);
   const features = useMemo(() => aggregateFeatures(filtered), [filtered]);
   const kpis = useMemo(() => computeKpis(filtered, companies), [filtered, companies]);
+  const insights = useMemo(() => generateInsights(data), [data]);
 
   const empty = filtered.length === 0;
 
@@ -111,22 +113,22 @@ export function Dashboard({
           ) : (
             <>
               <TabsContent value="overview">
-                <OverviewTab data={data} records={filtered} companies={companies} features={features} />
+                <OverviewTab insights={insights} records={filtered} companies={companies} features={features} />
               </TabsContent>
               <TabsContent value="products">
-                <ProductsTab records={filtered} companies={companies} features={features} />
+                <ProductsTab insights={insights} records={filtered} companies={companies} features={features} />
               </TabsContent>
               <TabsContent value="companies">
-                <CompaniesTab companies={companies} allRecords={data.records} />
+                <CompaniesTab insights={insights} companies={companies} allRecords={data.records} />
               </TabsContent>
               <TabsContent value="features">
-                <FeaturesTab features={features} />
+                <FeaturesTab insights={insights} features={features} />
               </TabsContent>
               <TabsContent value="matrix">
                 <MatrixTab records={filtered} />
               </TabsContent>
               <TabsContent value="adoption">
-                <AdoptionTab companies={companies} features={features} />
+                <AdoptionTab insights={insights} companies={companies} features={features} />
               </TabsContent>
             </>
           )}
@@ -136,8 +138,8 @@ export function Dashboard({
       <footer className="border-t py-4">
         <div className="mx-auto max-w-[1400px] px-4 text-xs text-muted-foreground md:px-6">
           {data.summary.totals.trackedRows.toLocaleString()} customer×feature observations ·{" "}
-          {data.summary.totals.companiesBothProducts} customers use both products · iSource Pages
-          not tracked in Userpilot (events only).
+          {data.summary.totals.companiesBothProducts} customers use both products · iSource is
+          captured via events; Userpilot&apos;s page API returns no iSource pages.
         </div>
       </footer>
     </div>

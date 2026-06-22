@@ -18,8 +18,10 @@ import { SectionCard } from "./section";
 import { AdoptionMeter, KindBadge, ProductBadge } from "./badges";
 import { SortHeader, useSortable } from "./use-sortable";
 import { BarList } from "./bar-list";
+import { InsightCallouts } from "./insight-callout";
+import { insightsFor, type Insight } from "@/lib/insights";
 
-export function FeaturesTab({ features }: { features: Feature[] }) {
+export function FeaturesTab({ insights, features }: { insights: Insight[]; features: Feature[] }) {
   const { sorted, sortKey, sortDir, toggle } = useSortable(features, "totalOccurrences");
   const [open, setOpen] = useState<string | null>(null);
 
@@ -59,6 +61,7 @@ export function FeaturesTab({ features }: { features: Feature[] }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <InsightCallouts insights={insightsFor(insights, "features")} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title="Most-used features" description="Ranked by total interactions">
           <BarList data={topByVolume} color="var(--chart-1)" valueFormatter={compact} />
