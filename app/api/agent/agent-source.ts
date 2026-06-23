@@ -176,11 +176,12 @@ export function buildAgent(opts: {
         sort_by:[{type:'aggregated',order:'desc',metadata:{expression:'unique_company_ids'}}] });
       for (const r of pg) {
         const nm = String(r.display_name||'').toLowerCase();
-        // page names rarely carry the product prefix; sourcing keywords -> iSource,
-        // otherwise default to iContract (pages are overwhelmingly contract/supplier/request).
-        const product = /isource|sourcing|\brfx\b|scoresheet|\bbid\b|reverse auction/.test(nm)
-          ? 'iSource' : 'iContract';
-        rows.push(Object.assign({ company: c.name, product, kind: 'Page' }, r));
+        // Keep ONLY iSource / iContract pages — drop suite-wide pages (Home, eInvoice,
+        // iRequest, supplier, etc.) that belong to neither product.
+        let product = null;
+        if (/isource|sourcing|\brfx\b|scoresheet|\bbid\b|reverse auction/.test(nm)) product = 'iSource';
+        else if (/contract|authoring|\bclause|amendment|repository|\bavoc\b|signoff/.test(nm)) product = 'iContract';
+        if (product) rows.push(Object.assign({ company: c.name, product, kind: 'Page' }, r));
       }
     } catch(e) {}
     await sleep(60);
