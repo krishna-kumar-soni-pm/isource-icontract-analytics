@@ -176,9 +176,10 @@ export function buildAgent(opts: {
         sort_by:[{type:'aggregated',order:'desc',metadata:{expression:'unique_company_ids'}}] });
       for (const r of pg) {
         const nm = String(r.display_name||'').toLowerCase();
-        const product = nm.includes('isource') ? 'iSource'
-          : nm.includes('icontract') ? 'iContract'
-          : (c.products.length === 1 ? c.products[0] : 'iContract');
+        // page names rarely carry the product prefix; sourcing keywords -> iSource,
+        // otherwise default to iContract (pages are overwhelmingly contract/supplier/request).
+        const product = /isource|sourcing|\brfx\b|scoresheet|\bbid\b|reverse auction/.test(nm)
+          ? 'iSource' : 'iContract';
         rows.push(Object.assign({ company: c.name, product, kind: 'Page' }, r));
       }
     } catch(e) {}
