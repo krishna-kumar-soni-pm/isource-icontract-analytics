@@ -155,6 +155,7 @@ export function buildAgent(opts: {
   for (const c of COMPANIES) {
     const cid = idmap[c.name];
     if (!cid) { done++; continue; }
+    // Events: per product (event names carry the product prefix, so the title filter is reliable)
     for (const product of c.products) {
       say('Pulling usage…', (++done > names.length ? names.length : done) + '  ·  ' + c.name + ' / ' + product);
       report('pulling', done, COMPANIES.length, c.name + ' / ' + product);
@@ -164,13 +165,24 @@ export function buildAgent(opts: {
           status:['active','draft','paused','processing'],
           sort_by:[{type:'aggregated',order:'desc',metadata:{expression:'unique_users'}}], limit:200 });
         for (const r of ev) rows.push(Object.assign({ company: c.name, product, kind: 'Event' }, r));
-        const pg = await pull('/tagged_pages/breakdown', {
-          company_id:cid, from, to, limit:200, search: product, title: product, status:'active', environment:'production',
-          sort_by:[{type:'aggregated',order:'desc',metadata:{expression:'unique_company_ids'}}] });
-        for (const r of pg) rows.push(Object.assign({ company: c.name, product, kind: 'Page' }, r));
       } catch(e) {}
       await sleep(60);
     }
+    // Pages: pull UNFILTERED once per company, then attribute product by name (iSource page
+    // tagging may not carry the product keyword). Avoids the iSource-pages blind spot.
+    try {
+      const pg = await pull('/tagged_pages/breakdown', {
+        company_id:cid, from, to, limit:200, status:'active', environment:'production',
+        sort_by:[{type:'aggregated',order:'desc',metadata:{expression:'unique_company_ids'}}] });
+      for (const r of pg) {
+        const nm = String(r.display_name||'').toLowerCase();
+        const product = nm.includes('isource') ? 'iSource'
+          : nm.includes('icontract') ? 'iContract'
+          : (c.products.length === 1 ? c.products[0] : 'iContract');
+        rows.push(Object.assign({ company: c.name, product, kind: 'Page' }, r));
+      }
+    } catch(e) {}
+    await sleep(60);
   }
 
   // ---- send to dashboard ----

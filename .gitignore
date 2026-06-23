@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local tooling
 .claude/
+
+# analyst report (local artifact)
+/report/
